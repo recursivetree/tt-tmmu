@@ -4,3 +4,4 @@ export LIBRELANE_TAG := 3.0.0rc1
 
 harden:
 	./tt/tt_tool.py --create-user-config --ihp
+	./tt/tt_tool.py --print-warnings

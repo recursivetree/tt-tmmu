@@ -15,25 +15,41 @@ module tt_um_recursivetree_tmmu_top (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
+    localparam integer WE_PORT = 0;
+    localparam integer READY_PORT = 1;
 
-    // List all unused inputs to prevent warnings
-    wire _unused = &{ena, clk, rst_n, 1'b0};
+    logic we_d;
+    logic ready_d;
 
-    logic tmp;
-    assign tmp = ui_in[0];
+    tmmu tmmu_i (
+        .clk_i(clk),
+        .rst_ni(rst_n),
 
-    logic [7:0] latch_q;
+        .vaddr_i(ui_in),
+        .paddr_o(uo_out),
 
-    always_latch begin
-        if (clk) begin
-            latch_q <= ui_in;
-        end
-    end
+        .we_i(we_d),
+        .ready_o(ready_d)
+    );
 
-    // All output pins must be assigned. If not used, assign to 0.
-    assign uo_out  = latch_q;  // Example: ou_out is the sum of ui_in and uio_in
-    assign uio_out = 0;
-    assign uio_oe  = 0;
+    assign we_d = uio_in[WE_PORT];
 
+    assign uio_out[WE_PORT] = 0;
+    assign uio_out[READY_PORT] = ready_d;
+    assign uio_out[2] = 0;
+    assign uio_out[3] = 0;
+    assign uio_out[4] = 0;
+    assign uio_out[5] = 0;
+    assign uio_out[6] = 0;
+    assign uio_out[7] = 0;
+
+    assign uio_oe[WE_PORT] = 0; // input
+    assign uio_oe[READY_PORT] = 1; // output
+    assign uio_oe[2] = 0; // input
+    assign uio_oe[3] = 0; // input
+    assign uio_oe[4] = 0; // input
+    assign uio_oe[5] = 0; // input
+    assign uio_oe[6] = 0; // input
+    assign uio_oe[7] = 0; // input
 
 endmodule

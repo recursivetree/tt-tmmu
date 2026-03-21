@@ -41,20 +41,24 @@ async def test_project(dut):
             dut.ui_in.value = addr
             dut.uio_in.value = WRITE_EN_MASK
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
             dut.ui_in.value = (addr + 7) % 256
             dut.uio_in.value = 0
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
             dut.ui_in.value = 0
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
 
         for offset in range(64):
             addr = base * ENTRIES + offset
             dut.ui_in.value = addr
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(10, unit="ns")
             assert dut.uio_out.value[READ_VALID_BIT] == 1
             assert dut.uio_out.value[TLB_HIT] == 1
             assert dut.uo_out.value == (addr + 7) % 256
+            await cocotb.triggers.Timer(10, unit="ns")
 
     # test tag checks
     async def test_tag_conflicts(addr):
@@ -62,19 +66,23 @@ async def test_project(dut):
         dut.ui_in.value = addr
         dut.uio_in.value = WRITE_EN_MASK
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
         dut.ui_in.value = 243  # random choice
         dut.uio_in.value = 0
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
         dut.ui_in.value = 0
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
 
         # read a tag conflicting value
         for i in range(3):
             dut.ui_in.value = (addr + (i+1) * ENTRIES) % 256
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(10, unit="ns")
             assert dut.uio_out.value[READ_VALID_BIT] == 1
             assert dut.uio_out.value[TLB_HIT] == 0
+            await cocotb.triggers.Timer(10, unit="ns")
 
     for i in range(256):
         await test_tag_conflicts(42)
@@ -86,11 +94,14 @@ async def test_project(dut):
         dut.ui_in.value = addr
         dut.uio_in.value = WRITE_EN_MASK
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
         dut.ui_in.value = 0
         dut.uio_in.value = 0
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
         dut.ui_in.value = 0
         await ClockCycles(dut.clk, 1)
+        await cocotb.triggers.Timer(5, unit="ns")
     model: list[tuple[int, int]] = [(addr, 0) for addr in range(ENTRIES)]
 
     for _ in range(100000):
@@ -100,7 +111,8 @@ async def test_project(dut):
         if is_read:
             dut.ui_in.value = addr
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 1)
+
+            await cocotb.triggers.Timer(10, unit="ns")
 
             expected_addr, expected_value = model[addr % ENTRIES]
 
@@ -112,6 +124,8 @@ async def test_project(dut):
             if expected_addr == addr:
                 assert dut.uio_out.value[TLB_HIT] == 1
                 assert dut.uo_out.value == expected_value
+
+            await cocotb.triggers.Timer(10, unit="ns")
         else:
             # do a write
             value = random.randint(0,255)
@@ -122,10 +136,16 @@ async def test_project(dut):
             dut.ui_in.value = addr
             dut.uio_in.value = WRITE_EN_MASK
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
             dut.ui_in.value = value
             dut.uio_in.value = 0
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
             dut.ui_in.value = 0
             await ClockCycles(dut.clk, 1)
+            await cocotb.triggers.Timer(5, unit="ns")
+
+        await cocotb.triggers.Timer(10, unit="ns")
+        assert dut.uio_out.value[READ_VALID_BIT] == 1
 
         await ClockCycles(dut.clk, random.randint(0,3))

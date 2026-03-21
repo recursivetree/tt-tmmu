@@ -5,6 +5,7 @@
 
 `default_nettype none
 
+/* verilator lint_off DECLFILENAME */
 module tt_um_recursivetree_tmmu_top (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -18,7 +19,9 @@ module tt_um_recursivetree_tmmu_top (
     localparam integer WE_PORT = 0;
     localparam integer READY_PORT = 1;
 
-    logic we_d;
+    wire _unused = &{ena};
+
+    logic write_en_d;
     logic ready_d;
 
     tmmu tmmu_i (
@@ -28,11 +31,11 @@ module tt_um_recursivetree_tmmu_top (
         .vaddr_i(ui_in),
         .paddr_o(uo_out),
 
-        .we_i(we_d),
+        .write_en_i(write_en_d),
         .ready_o(ready_d)
     );
 
-    assign we_d = uio_in[WE_PORT];
+    assign write_en_d = uio_in[WE_PORT];
 
     assign uio_out[WE_PORT] = 0;
     assign uio_out[READY_PORT] = ready_d;

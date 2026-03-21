@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+This is a TLB (translation lookaside buffer) for a TTL IC breadboard CPU using latch memory.
 
 ## How to test
 

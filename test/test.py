@@ -6,9 +6,15 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 import random
 
+async def wait_clk_cycle_to_app(dut, n):
+    if n > 0:
+        await ClockCycles(dut.clk, n)
+        await cocotb.triggers.Timer(5, unit="ns")
+
 @cocotb.test()
 async def test_project(dut):
     dut._log.info("Start")
+    random.seed(2)
 
     # Set the clock period to 10 us (100 KHz)
     clock = Clock(dut.clk, 20, unit="ns")
@@ -20,7 +26,7 @@ async def test_project(dut):
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 1)
+    await wait_clk_cycle_to_app(dut, 1)
     dut.rst_n.value = 1
 
     dut._log.info("Test project behavior")
@@ -40,15 +46,12 @@ async def test_project(dut):
             addr = base * ENTRIES + offset
             dut.ui_in.value = addr
             dut.uio_in.value = WRITE_EN_MASK
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
             dut.ui_in.value = (addr + 7) % 256
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
             dut.ui_in.value = 0
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
 
         for offset in range(64):
             addr = base * ENTRIES + offset
@@ -65,15 +68,12 @@ async def test_project(dut):
         # do a write
         dut.ui_in.value = addr
         dut.uio_in.value = WRITE_EN_MASK
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
         dut.ui_in.value = 243  # random choice
         dut.uio_in.value = 0
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
         dut.ui_in.value = 0
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
 
         # read a tag conflicting value
         for i in range(3):
@@ -93,15 +93,12 @@ async def test_project(dut):
     for addr in range(64):
         dut.ui_in.value = addr
         dut.uio_in.value = WRITE_EN_MASK
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
         dut.ui_in.value = 0
         dut.uio_in.value = 0
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
         dut.ui_in.value = 0
-        await ClockCycles(dut.clk, 1)
-        await cocotb.triggers.Timer(5, unit="ns")
+        await wait_clk_cycle_to_app(dut, 1)
     model: list[tuple[int, int]] = [(addr, 0) for addr in range(ENTRIES)]
 
     for _ in range(100000):
@@ -116,7 +113,7 @@ async def test_project(dut):
 
             expected_addr, expected_value = model[addr % ENTRIES]
 
-            #dut._log.info(f"read {expected_addr} {expected_value}")
+            #dut._log.info(f"read addr={addr} expected_addr={expected_addr} expected_value={expected_value}")
 
             assert dut.uio_out.value[READ_VALID_BIT] == 1
             if expected_addr != addr:
@@ -135,17 +132,15 @@ async def test_project(dut):
 
             dut.ui_in.value = addr
             dut.uio_in.value = WRITE_EN_MASK
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
             dut.ui_in.value = value
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
             dut.ui_in.value = 0
-            await ClockCycles(dut.clk, 1)
-            await cocotb.triggers.Timer(5, unit="ns")
+            await wait_clk_cycle_to_app(dut, 1)
 
         await cocotb.triggers.Timer(10, unit="ns")
         assert dut.uio_out.value[READ_VALID_BIT] == 1
+        await cocotb.triggers.Timer(10, unit="ns")
 
-        await ClockCycles(dut.clk, random.randint(0,3))
+        await wait_clk_cycle_to_app(dut, random.randint(0,3))

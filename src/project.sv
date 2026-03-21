@@ -16,39 +16,41 @@ module tt_um_recursivetree_tmmu_top (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
-    localparam integer WE_PORT = 0;
-    localparam integer READY_PORT = 1;
+    localparam integer WRITE_EN_PORT = 0;
+    localparam integer READ_VALID_PORT = 1;
+    localparam integer TLB_HIT_PORT = 2;
 
     wire _unused = &{ena};
 
-    logic write_en_d;
-    logic ready_d;
+    logic read_valid_d;
+    logic tlb_hit_d;
 
-    tmmu tmmu_i (
+    latch_tlb #(
+        .NUM_ENTRIES(64)
+    ) latch_memory_i (
         .clk_i(clk),
         .rst_ni(rst_n),
 
-        .vaddr_i(ui_in),
+        .data_i(ui_in),
         .paddr_o(uo_out),
 
-        .write_en_i(write_en_d),
-        .ready_o(ready_d)
+        .write_en_i(uio_in[WRITE_EN_PORT]),
+        .read_valid_o(read_valid_d),
+        .tlb_hit_o(tlb_hit_d)
     );
 
-    assign write_en_d = uio_in[WE_PORT];
-
-    assign uio_out[WE_PORT] = 0;
-    assign uio_out[READY_PORT] = ready_d;
-    assign uio_out[2] = 0;
+    assign uio_out[WRITE_EN_PORT] = 0;
+    assign uio_out[READ_VALID_PORT] = read_valid_d;
+    assign uio_out[TLB_HIT_PORT] = tlb_hit_d;
     assign uio_out[3] = 0;
     assign uio_out[4] = 0;
     assign uio_out[5] = 0;
     assign uio_out[6] = 0;
     assign uio_out[7] = 0;
 
-    assign uio_oe[WE_PORT] = 0; // input
-    assign uio_oe[READY_PORT] = 1; // output
-    assign uio_oe[2] = 0; // input
+    assign uio_oe[WRITE_EN_PORT] = 0; // input
+    assign uio_oe[READ_VALID_PORT] = 1; // output
+    assign uio_oe[TLB_HIT_PORT] = 1; // input
     assign uio_oe[3] = 0; // input
     assign uio_oe[4] = 0; // input
     assign uio_oe[5] = 0; // input

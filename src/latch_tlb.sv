@@ -33,16 +33,29 @@ module latch_tlb #(
 
     assign latch_memory_read_result = memory_q[data_i[$clog2(NUM_ENTRIES)-1:0]];
 
-    always_latch begin
-        if(write_now_q) begin // TODO: only in first half of cycle
-            for (integer i = 0; i < NUM_ENTRIES; i = i+1) begin
-                /* verilator lint_off WIDTHEXPAND */
-                if(i == stable_addr_q) begin
+    generate
+        for (genvar i = 0; i < NUM_ENTRIES; i = i+1) begin : mem_entry
+            logic write_entry_d;
+            logic entry_selected;
+            assign entry_selected = i == stable_addr_q;
+
+            `ifdef RTLSIM
+             assign write_entry_d = write_now_q && entry_selected;
+            `else
+            sg13g2_and2_2 anti_glitch_and_i (
+                .A(write_now_q),
+                .B(entry_selected),
+                .X(write_entry_d)
+            );
+            `endif
+
+            always_latch begin
+                if(write_entry_d) begin
                     memory_q[i] = stable_new_data_q;
                 end
             end
         end
-    end
+    endgenerate
 
     assign paddr_o = latch_memory_read_result[7:0];
     assign ancil_data_o = latch_memory_read_result[WORD_SIZE-1:WORD_SIZE-2];

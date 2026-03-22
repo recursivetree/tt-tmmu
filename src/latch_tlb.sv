@@ -12,12 +12,15 @@ module latch_tlb #(
     input logic [7:0] data_i,
     output logic [7:0] paddr_o,
 
+    input logic [1:0] ancil_data_i,
+    output logic [1:0] ancil_data_o,
+
     input logic write_en_i,
     output logic read_valid_o,
     output logic tlb_hit_o
 );
     localparam integer TAG_SIZE = 8 - $clog2(NUM_ENTRIES);
-    localparam integer WORD_SIZE = 8 + TAG_SIZE;
+    localparam integer WORD_SIZE = 8 + TAG_SIZE + 2;
 
     logic [WORD_SIZE-1:0] latch_memory_read_result;
 
@@ -42,6 +45,7 @@ module latch_tlb #(
     end
 
     assign paddr_o = latch_memory_read_result[7:0];
+    assign ancil_data_o = latch_memory_read_result[WORD_SIZE-1:WORD_SIZE-2];
     assign tlb_hit_o = latch_memory_read_result[8+TAG_SIZE-1:8] == data_i[7:$clog2(NUM_ENTRIES)];
 
     /* state machine */
@@ -69,6 +73,7 @@ module latch_tlb #(
             ACQUIRE: begin
                 state_d = WRITE;
                 stable_new_data_next_d[7:0] = data_i;
+                stable_new_data_next_d[WORD_SIZE-1:WORD_SIZE-2] = ancil_data_i;
                 write_next_d = 1; // we have to trigger it a cycle before we need to use the value
             end
             WRITE: begin

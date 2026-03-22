@@ -42,7 +42,7 @@ module latch_tlb #(
             `ifdef RTLSIM
              assign write_entry_d = write_now_q && entry_selected;
             `else
-            sg13g2_and2_2 anti_glitch_and_i (
+            sg13g2_and2_1 anti_glitch_and_i (
                 .A(write_now_q),
                 .B(entry_selected),
                 .X(write_entry_d)
